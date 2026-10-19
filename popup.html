@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:360px;background:#0a0e14;color:#e8eef7;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;padding:16px;font-size:14px}
+h1{font-size:16px;margin-bottom:12px;text-align:center;color:#22c58b}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{flex:1;padding:7px;text-align:center;border-radius:8px;border:1px solid #1e2a3d;background:#111826;color:#8fa3bd;cursor:pointer;font-size:13px}
+.tab.active{background:rgba(34,197,139,.12);border-color:#22c58b;color:#22c58b}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:12px;color:#8fa3bd;margin-bottom:4px}
+.field input{width:100%;padding:8px 10px;border-radius:8px;border:1px solid #1e2a3d;background:#0d1219;color:#e8eef7;font-size:14px;outline:none}
+.field input:focus{border-color:#4da3ff}
+.result{margin-top:14px;padding:12px;border-radius:10px;background:#0d1219;border:1px solid #1e2a3d}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #1e2a3d;font-size:13px}
+.row:last-child{border:none}
+.label{color:#8fa3bd}
+.value{font-weight:600;font-variant-numeric:tabular-nums}
+.pos{color:#22c58b}.neg{color:#f6465d}.warn{color:#f0b90b}
+.ad{margin-top:12px;padding:10px;border-radius:8px;background:rgba(77,163,255,.06);border:1px dashed #1e2a3d;text-align:center;font-size:12px;color:#5b6b82}
+.ad a{color:#4da3ff;text-decoration:none}
+</style>
+</head>
+<body>
+<h1>📊 美股期权计算器</h1>
+
+<div class="tabs">
+  <div class="tab active" data-type="call">买入看涨 Call</div>
+  <div class="tab" data-type="put">买入看跌 Put</div>
+</div>
+
+<div class="field">
+  <label>行权价 ($)</label>
+  <input type="number" id="strike" placeholder="如 500" step="0.01">
+</div>
+<div class="field">
+  <label>权利金 ($/股)</label>
+  <input type="number" id="premium" placeholder="如 3.50" step="0.01">
+</div>
+<div class="field">
+  <label>买入合约数</label>
+  <input type="number" id="contracts" value="1" min="1" step="1">
+</div>
+<div class="field">
+  <label>到期股价 ($)</label>
+  <input type="number" id="spot" placeholder="如 520" step="0.01">
+</div>
+
+<div class="result" id="result" style="display:none"></div>
+
+<div class="ad">
+  💡 更多美股工具请访问 <a href="https://stock-toolbox.pages.dev" target="_blank">StockToolBox</a>
+</div>
+
+<script>
+let optType = 'call';
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    optType = tab.dataset.type;
+    calc();
+  });
+});
+
+['strike','premium','contracts','spot'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calc);
+});
+
+function calc(){
+  const k = parseFloat(document.getElementById('strike').value);
+  const p = parseFloat(document.getElementById('premium').value);
+  const c = parseInt(document.getElementById('contracts').value) || 1;
+  const s = parseFloat(document.getElementById('spot').value);
+  const r = document.getElementById('result');
+  
+  if(isNaN(k)||isNaN(p)||isNaN(s)){ r.style.display='none'; return; }
+  
+  const mult = 100;
+  const cost = p * mult * c;
+  let intrinsic, profit, be;
+  
+  if(optType === 'call'){
+    intrinsic = Math.max(0, s - k);
+    be = k + p;
+  } else {
+    intrinsic = Math.max(0, k - s);
+    be = k - p;
+  }
+  
+  const value = intrinsic * mult * c;
+  profit = value - cost;
+  const roi = (profit / cost * 100);
+  
+  r.innerHTML = `
+    <div class="row"><span class="label">投入成本</span><span class="value">$${cost.toFixed(0)}</span></div>
+    <div class="row"><span class="label">到期价值</span><span class="value">$${value.toFixed(0)}</span></div>
+    <div class="row"><span class="label">到期盈亏</span><span class="value ${profit>=0?'pos':'neg'}">$${profit.toFixed(0)} (${roi>=0?'+':''}${roi.toFixed(1)}%)</span></div>
+    <div class="row"><span class="label">盈亏平衡价</span><span class="value warn">$${be.toFixed(2)}</span></div>
+    <div class="row"><span class="label">最大亏损</span><span class="value neg">-$${cost.toFixed(0)}</span></div>
+  `;
+  r.style.display = 'block';
+}
+</script>
+</body>
+</html>

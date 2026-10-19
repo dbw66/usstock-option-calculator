@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "美股期权计算器",
+  "version": "1.0.0",
+  "description": "快速计算美股期权盈亏：买入看涨/看跌，实时显示最大盈亏、盈亏平衡点。专为中文美股散户设计。",
+  "permissions": [],
+  "action": {
+    "default_popup": "popup.html",
+    "default_width": 380,
+    "default_height": 520
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
